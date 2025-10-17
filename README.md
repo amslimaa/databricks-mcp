@@ -84,6 +84,13 @@ Adicione o seguinte objeto `mcpServers` às suas configurações de usuário ou 
   }
 }
 ```
+<p align="center">
+  <img src="assets/video 1.gif" alt="Databricks MCP Demo 1" width="700"/>
+</p>
+
+<p align="center">
+  <img src="assets/video 2.gif" alt="Databricks MCP Demo 2" width="700"/>
+</p>
 
 **Observações:**
 
