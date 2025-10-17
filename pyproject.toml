@@ -1,0 +1,15 @@
+[project]
+name = "databricks-mcp"
+version = "0.1.0"
+description = "databricks model context protocol"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "mcp[cli]>=1.17.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "argparse>=1.4.0",
+]
+
+[tool.setuptools]
+packages = {find = {}}
