@@ -34,7 +34,8 @@ Este projeto utiliza o `uv` como gerenciador de pacotes e ambientes virtuais.
 
 1.  **Clone o repositório:**
     ```bash
-    git clone https://github.com/seu-usuario/databricks-mcp.git
+    git clone https://github.com/amslimaa/databricks-mcp.git
+
     cd databricks-mcp
     ```
 
