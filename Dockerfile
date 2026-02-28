@@ -7,7 +7,7 @@ RUN pip install uv
 COPY pyproject.toml .
 RUN uv pip install --system -e .
 
-COPY catalogs.py main.py schemas.py tables.py queries.py resources.py ./
+COPY catalogs.py main.py schemas.py tables.py queries.py resources.py context.py ./
 
 EXPOSE 8080
 

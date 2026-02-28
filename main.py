@@ -4,6 +4,8 @@ Databricks MCP Server.
 
 import argparse
 import os
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 from mcp.server.fastmcp import FastMCP
 from catalogs import mcp_tools as catalogs_tools
 from schemas import mcp_tools as schemas_tools
@@ -25,14 +27,18 @@ args, _ = parser.parse_known_args()
 mcp = FastMCP("Databricks MCP", host="0.0.0.0", port=PORT)
 
 
-@mcp.middleware("request")
-async def credentials_middleware(request, call_next):
-    host = request.headers.get("X-Databricks-Host")
-    token = request.headers.get("X-Databricks-Token")
-    set_request_credentials(host, token)
-    response = await call_next(request)
-    clear_request_credentials()
-    return response
+class CredentialsMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        host = request.headers.get("X-Databricks-Host")
+        token = request.headers.get("X-Databricks-Token")
+        set_request_credentials(host, token)
+        response = await call_next(request)
+        clear_request_credentials()
+        return response
+
+
+app = mcp.streamable_http_app()
+app.add_middleware(CredentialsMiddleware)
 
 
 catalogs_tools(mcp)
@@ -42,10 +48,12 @@ queries_tools(mcp)
 tables_tools(mcp)
 
 if __name__ == "__main__":
+    import uvicorn
+
     transport = args.transport
     if transport == "stdio":
         mcp.run(transport="stdio")
     elif transport == "sse":
         mcp.run(transport="sse")
     else:
-        mcp.run(transport="streamable-http")
+        uvicorn.run(app, host="0.0.0.0", port=PORT)
