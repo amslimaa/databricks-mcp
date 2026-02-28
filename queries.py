@@ -6,6 +6,7 @@ consultas SQL, monitorar seu status de forma assíncrona e buscar os resultados.
 Ele abstrai a complexidade do polling e do tratamento de resultados, que podem
 ser retornados diretamente (inline) ou através de links externos (external_links).
 """
+
 import os
 import time
 import logging
@@ -14,12 +15,13 @@ from typing import Dict
 import requests
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+from context import get_request_credentials
 
-# Configuração do logger
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
-# Load environment variables
 load_dotenv()
 
 
@@ -27,12 +29,15 @@ class DatabricksQueryClient:
     """Client for the Databricks Statement Execution API."""
 
     def __init__(self):
-        self.host = os.getenv("DATABRICKS_HOST")
-        self.token = os.getenv("DATABRICKS_TOKEN")
+        creds = get_request_credentials()
+        if creds:
+            self.host = creds.host
+            self.token = creds.token
+        else:
+            self.host = os.getenv("DATABRICKS_HOST")
+            self.token = os.getenv("DATABRICKS_TOKEN")
         if not self.host or not self.token:
-            raise ValueError(
-                "DATABRICKS_HOST and DATABRICKS_TOKEN are required"
-            )
+            raise ValueError("DATABRICKS_HOST and DATABRICKS_TOKEN are required")
         self.headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json",
@@ -46,7 +51,7 @@ class DatabricksQueryClient:
             "warehouse_id": warehouse_id,
             "statement": statement,
             "wait_timeout": "0s",  # Returns immediately
-            "disposition": "EXTERNAL_LINKS" # Recommended for fetching results
+            "disposition": "EXTERNAL_LINKS",  # Recommended for fetching results
         }
         logger.debug(f"Submitting statement to {self.base_url}")
         response = requests.post(self.base_url, headers=self.headers, json=payload)
@@ -75,22 +80,22 @@ class DatabricksQueryClient:
         with requests.Session() as session:
             for link_info in result["external_links"]:
                 # The external link does not require auth headers
-                logger.info(f"Fetching results from external link (chunk {link_info['chunk_index']})...")
+                logger.info(
+                    f"Fetching results from external link (chunk {link_info['chunk_index']})..."
+                )
                 response = session.get(link_info["external_link"])
                 response.raise_for_status()
                 # The data is returned as a JSON array of arrays
                 all_data.extend(response.json())
 
         # Reconstruct the result object to match the INLINE format
-        final_result = {
-            "data_array": all_data,
-            "row_count": len(all_data)
-        }
+        final_result = {"data_array": all_data, "row_count": len(all_data)}
         return final_result
 
 
 # --- Lazy Initialization of the client ---
 _query_client_instance = None
+
 
 def get_query_client():
     """Lazily initializes and returns the DatabricksQueryClient."""
@@ -104,7 +109,9 @@ def mcp_tools(mcp: FastMCP):
     """Registers query-related tools with the MCP server."""
 
     @mcp.tool()
-    def execute_sql_query(warehouse_id: str, sql_query: str, timeout_seconds: int = 300) -> Dict:
+    def execute_sql_query(
+        warehouse_id: str, sql_query: str, timeout_seconds: int = 300
+    ) -> Dict:
         """
         Executa uma query SQL em um SQL Warehouse e aguarda o resultado.
 
@@ -124,7 +131,9 @@ def mcp_tools(mcp: FastMCP):
                   - 'row_count' (int): O número total de linhas retornadas.
         """
         try:
-            logger.info(f"Executing SQL query on warehouse {warehouse_id}: \"{sql_query[:100]}...\"")
+            logger.info(
+                f'Executing SQL query on warehouse {warehouse_id}: "{sql_query[:100]}..."'
+            )
             client = get_query_client()
             # 1. Submit the query
             submission_response = client.execute_statement(warehouse_id, sql_query)
@@ -136,30 +145,44 @@ def mcp_tools(mcp: FastMCP):
             while time.time() - start_time < timeout_seconds:
                 status_response = client.get_statement(statement_id)
                 status = status_response["status"]["state"]
-                logger.debug(f"Polling statement {statement_id}. Current status: {status}")
+                logger.debug(
+                    f"Polling statement {statement_id}. Current status: {status}"
+                )
 
                 if status == "SUCCEEDED":
                     logger.info(f"Query {statement_id} succeeded. Fetching results...")
                     # Process the result to fetch data from external links if necessary
                     result = status_response.get("result", {})
                     manifest = status_response.get("manifest", {})
-                    
+
                     final_data = client._fetch_results_from_links(result)
                     final_data["schema"] = manifest.get("schema", {})
-                    logger.info(f"Successfully fetched {final_data.get('row_count', 0)} rows.")
+                    logger.info(
+                        f"Successfully fetched {final_data.get('row_count', 0)} rows."
+                    )
                     return final_data
                 elif status in ["FAILED", "CANCELED", "CLOSED"]:
-                    error_msg = status_response.get('status', {}).get('error', {}).get('message', 'Unknown error')
-                    logger.error(f"Query {statement_id} failed with status '{status}'. Reason: {error_msg}")
+                    error_msg = (
+                        status_response.get("status", {})
+                        .get("error", {})
+                        .get("message", "Unknown error")
+                    )
+                    logger.error(
+                        f"Query {statement_id} failed with status '{status}'. Reason: {error_msg}"
+                    )
                     raise Exception(f"Query failed with status '{status}': {error_msg}")
-                
-                time.sleep(2) # Wait 2 seconds before polling again
 
-            logger.warning(f"Query {statement_id} timed out after {timeout_seconds} seconds.")
+                time.sleep(2)  # Wait 2 seconds before polling again
+
+            logger.warning(
+                f"Query {statement_id} timed out after {timeout_seconds} seconds."
+            )
             raise TimeoutError(f"Query timed out after {timeout_seconds} seconds.")
 
         except (requests.exceptions.RequestException, ValueError) as e:
-            logger.error(f"API request failed during query execution: {e}", exc_info=True)
+            logger.error(
+                f"API request failed during query execution: {e}", exc_info=True
+            )
             raise Exception(f"API request failed during query execution: {e}")
 
     return mcp

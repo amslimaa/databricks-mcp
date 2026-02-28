@@ -13,9 +13,11 @@ Este projeto foi projetado para ser usado como um agente inteligente ou um backe
 
 - **Gerenciamento de Catálogos**: Crie, liste e exclua catálogos do Unity Catalog.
 - **Gerenciamento de Schemas**: Crie, liste, atualize e exclua schemas dentro dos catálogos.
+- **Gerenciamento de Tabelas**: Crie, liste, atualize e exclua tabelas dentro dos schemas.
 - **Execução de SQL**: Execute consultas SQL em seus SQL Warehouses e obtenha os resultados de forma síncrona.
 - **Inspeção de Recursos**: Liste os SQL Warehouses disponíveis em seu workspace.
-- **Arquitetura Modular**: O código é organizado em módulos (`catalogs`, `schemas`, `queries`, `resources`), facilitando a manutenção e a extensão.
+- **Arquitetura Modular**: O código é organizado em módulos (`catalogs`, `schemas`, `tables`, `queries`, `resources`), facilitando a manutenção e a extensão.
+- **Credenciais por Requisição**: Suporte a credenciais via headers (`X-Databricks-Host`, `X-Databricks-Token`) para deploy em produção.
 - **Configuração Simples**: Utilize um arquivo `.env` para gerenciar suas credenciais do Databricks de forma segura.
 
 ## 🚀 Começando
@@ -99,9 +101,9 @@ DATABRICKS_TOKEN="seu-token-de-acesso-pessoal"
       "type": "remote",
       "url": "http://localhost:8080/mcp",
       "enabled": true,
-      "environment": {
-        "DATABRICKS_HOST": "${DATABRICKS_HOST}",
-        "DATABRICKS_TOKEN": "${DATABRICKS_TOKEN}"
+      "headers": {
+        "X-Databricks-Host": "${DATABRICKS_HOST}",
+        "X-Databricks-Token": "${DATABRICKS_TOKEN}"
       }
     }
   }
@@ -180,6 +182,14 @@ Aqui está uma visão geral das ferramentas disponíveis, agrupadas por módulo:
 #### ❓ Consultas (`queries.py`)
 
 - `execute_sql_query(warehouse_id: str, sql_query: str, timeout_seconds: int = 300) -> dict`: Executa uma consulta SQL em um warehouse e aguarda o resultado.
+
+#### 📊 Tabelas (`tables.py`)
+
+- `list_tables(catalog_name: str, schema_name: str) -> dict`: Lista todas as tabelas em um schema.
+- `create_table(table_info: Dict) -> dict`: Cria uma nova tabela em um schema.
+- `update_table(full_name: str, updates: Dict) -> dict`: Atualiza uma tabela existente.
+- `delete_table(full_name: str) -> dict`: Exclui uma tabela.
+- `resource: "table://{catalog_name}.{schema_name}.{table_name}"`: Obtém informações sobre uma tabela específica.
 
 #
 ## 🤝 Contribuições

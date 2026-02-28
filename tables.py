@@ -7,19 +7,27 @@ import requests
 import os
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+from context import get_request_credentials
 
-# Load environment variables
 load_dotenv()
+
 
 class DatabricksTableClient:
     def __init__(self):
-        self.host = os.getenv("DATABRICKS_HOST")
-        self.token = os.getenv("DATABRICKS_TOKEN")
+        creds = get_request_credentials()
+        if creds:
+            self.host = creds.host
+            self.token = creds.token
+        else:
+            self.host = os.getenv("DATABRICKS_HOST")
+            self.token = os.getenv("DATABRICKS_TOKEN")
         if not self.host or not self.token:
-            raise ValueError("DATABRICKS_HOST and DATABRICKS_TOKEN environment variables are required")
+            raise ValueError(
+                "DATABRICKS_HOST and DATABRICKS_TOKEN environment variables are required"
+            )
         self.headers = {
             "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         self.base_url = f"{self.host}/api/2.1/unity-catalog/tables"
 
@@ -57,8 +65,10 @@ class DatabricksTableClient:
         response.raise_for_status()
         return {"status": "success", "message": f"Table {full_name} deleted."}
 
+
 # --- Lazy Initialization of the client ---
 _table_client_instance = None
+
 
 def get_table_client():
     """Lazily initializes and returns the DatabricksTableClient."""
@@ -66,6 +76,7 @@ def get_table_client():
     if _table_client_instance is None:
         _table_client_instance = DatabricksTableClient()
     return _table_client_instance
+
 
 def mcp_tools(mcp: FastMCP):
     """Registers table-related tools with the MCP server."""

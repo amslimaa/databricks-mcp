@@ -1,14 +1,15 @@
 """
 Databricks Schemas Module: CRUD operations for Unity Catalog schemas.
 """
+
 import os
 from typing import Dict, Optional
 
 import requests
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+from context import get_request_credentials
 
-# Load environment variables
 load_dotenv()
 
 
@@ -16,8 +17,13 @@ class DatabricksSchemaClient:
     """Client to interact with the Databricks Schemas API."""
 
     def __init__(self):
-        self.host = os.getenv("DATABRICKS_HOST")
-        self.token = os.getenv("DATABRICKS_TOKEN")
+        creds = get_request_credentials()
+        if creds:
+            self.host = creds.host
+            self.token = creds.token
+        else:
+            self.host = os.getenv("DATABRICKS_HOST")
+            self.token = os.getenv("DATABRICKS_TOKEN")
         if not self.host or not self.token:
             raise ValueError(
                 "DATABRICKS_HOST and DATABRICKS_TOKEN environment variables are required"
@@ -36,7 +42,11 @@ class DatabricksSchemaClient:
         return response.json()
 
     def create_schema(
-        self, catalog_name: str, name: str, comment: Optional[str] = None, properties: Optional[dict] = None
+        self,
+        catalog_name: str,
+        name: str,
+        comment: Optional[str] = None,
+        properties: Optional[dict] = None,
     ) -> Dict:
         """Create a new schema in a catalog."""
         payload = {"name": name, "catalog_name": catalog_name}
@@ -56,7 +66,11 @@ class DatabricksSchemaClient:
         return response.json()
 
     def update_schema(
-        self, full_name: str, new_name: Optional[str] = None, comment: Optional[str] = None, properties: Optional[dict] = None
+        self,
+        full_name: str,
+        new_name: Optional[str] = None,
+        comment: Optional[str] = None,
+        properties: Optional[dict] = None,
     ) -> Dict:
         """Update an existing schema."""
         url = f"{self.base_url}/{full_name}"
@@ -82,6 +96,7 @@ class DatabricksSchemaClient:
 
 # --- Lazy Initialization of the client ---
 _schema_client_instance = None
+
 
 def get_schema_client():
     """Lazily initializes and returns the DatabricksSchemaClient."""
@@ -110,7 +125,10 @@ def mcp_tools(mcp: FastMCP):
 
     @mcp.tool()
     def create_schema(
-        catalog_name: str, name: str, comment: Optional[str] = None, properties: Optional[dict] = None
+        catalog_name: str,
+        name: str,
+        comment: Optional[str] = None,
+        properties: Optional[dict] = None,
     ) -> Dict:
         """
         Create a new schema in a catalog.
@@ -121,13 +139,18 @@ def mcp_tools(mcp: FastMCP):
             properties (dict, optional): A dictionary of key-value properties.
         """
         try:
-            return get_schema_client().create_schema(catalog_name, name, comment, properties)
+            return get_schema_client().create_schema(
+                catalog_name, name, comment, properties
+            )
         except (requests.exceptions.RequestException, ValueError) as e:
             raise Exception(f"Failed to create schema: {e}")
 
     @mcp.tool()
     def update_schema(
-        full_name: str, new_name: Optional[str] = None, comment: Optional[str] = None, properties: Optional[dict] = None
+        full_name: str,
+        new_name: Optional[str] = None,
+        comment: Optional[str] = None,
+        properties: Optional[dict] = None,
     ) -> Dict:
         """
         Update an existing schema.
@@ -138,7 +161,9 @@ def mcp_tools(mcp: FastMCP):
             properties (dict, optional): A new set of key-value properties.
         """
         try:
-            return get_schema_client().update_schema(full_name, new_name, comment, properties)
+            return get_schema_client().update_schema(
+                full_name, new_name, comment, properties
+            )
         except (requests.exceptions.RequestException, ValueError) as e:
             raise Exception(f"Failed to update schema: {e}")
 

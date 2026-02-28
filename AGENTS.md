@@ -19,6 +19,12 @@ DATABRICKS_HOST="https://..." DATABRICKS_TOKEN="..." uv run python main.py stdio
 
 # HTTP transport (for remote deployment)
 uv run python main.py
+
+# SSE transport
+uv run python main.py --transport sse
+
+# Explicit transport selection
+uv run python main.py --transport streamable-http
 ```
 
 ### Railway Deployment
@@ -233,6 +239,7 @@ def __init__(self):
 ```
 databricks-mcp/
 ├── main.py              # Entry point, FastMCP setup
+├── context.py           # Request context for per-request credentials
 ├── catalogs.py          # Catalog CRUD + MCP tools
 ├── schemas.py           # Schema CRUD + MCP tools
 ├── tables.py            # Table CRUD + MCP tools
@@ -254,13 +261,13 @@ Create `opencode.json` for OpenCode MCP client:
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "databricks-mcp": {
+    "databricks_mcp": {
       "type": "remote",
       "url": "http://localhost:8080/mcp",
       "enabled": true,
-      "environment": {
-        "DATABRICKS_HOST": "${DATABRICKS_HOST}",
-        "DATABRICKS_TOKEN": "${DATABRICKS_TOKEN}"
+      "headers": {
+        "X-Databricks-Host": "${DATABRICKS_HOST}",
+        "X-Databricks-Token": "${DATABRICKS_TOKEN}"
       }
     }
   }

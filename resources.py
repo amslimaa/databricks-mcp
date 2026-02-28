@@ -1,14 +1,15 @@
 """
 Databricks Resources Module: List compute resources like SQL Warehouses.
 """
+
 import os
 from typing import Dict
 
 import requests
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+from context import get_request_credentials
 
-# Load environment variables
 load_dotenv()
 
 
@@ -16,8 +17,13 @@ class DatabricksResourcesClient:
     """Client to interact with the Databricks Resources API (e.g., SQL Warehouses)."""
 
     def __init__(self):
-        self.host = os.getenv("DATABRICKS_HOST")
-        self.token = os.getenv("DATABRICKS_TOKEN")
+        creds = get_request_credentials()
+        if creds:
+            self.host = creds.host
+            self.token = creds.token
+        else:
+            self.host = os.getenv("DATABRICKS_HOST")
+            self.token = os.getenv("DATABRICKS_TOKEN")
         if not self.host or not self.token:
             raise ValueError(
                 "DATABRICKS_HOST and DATABRICKS_TOKEN environment variables are required"
@@ -38,6 +44,7 @@ class DatabricksResourcesClient:
 
 # --- Lazy Initialization of the client ---
 _resources_client_instance = None
+
 
 def get_resources_client():
     """Lazily initializes and returns the DatabricksResourcesClient."""

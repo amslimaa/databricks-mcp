@@ -7,19 +7,27 @@ import requests
 import os
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+from context import get_request_credentials
 
-# Load environment variables
 load_dotenv()
+
 
 class DatabricksCatalogClient:
     def __init__(self):
-        self.host = os.getenv("DATABRICKS_HOST")
-        self.token = os.getenv("DATABRICKS_TOKEN")
+        creds = get_request_credentials()
+        if creds:
+            self.host = creds.host
+            self.token = creds.token
+        else:
+            self.host = os.getenv("DATABRICKS_HOST")
+            self.token = os.getenv("DATABRICKS_TOKEN")
         if not self.host or not self.token:
-            raise ValueError("DATABRICKS_HOST and DATABRICKS_TOKEN environment variables are required")
+            raise ValueError(
+                "DATABRICKS_HOST and DATABRICKS_TOKEN environment variables are required"
+            )
         self.headers = {
             "Authorization": f"Bearer {self.token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
 
     def list_catalogs(self, page_token: Optional[str] = None) -> Dict:
@@ -41,7 +49,7 @@ class DatabricksCatalogClient:
         properties: Optional[dict] = None,
         provider_name: str = "",
         share_name: str = "",
-        storage_root: str = ""
+        storage_root: str = "",
     ) -> Dict:
         url = f"{self.host}/api/2.1/unity-catalog/catalogs"
         payload = {"name": name}
@@ -73,13 +81,17 @@ class DatabricksCatalogClient:
 
     def get_catalog_info(self, catalog_name: str) -> Dict:
         catalogs = self.list_catalogs()
-        catalog = next((c for c in catalogs.get("catalogs", []) if c["name"] == catalog_name), None)
+        catalog = next(
+            (c for c in catalogs.get("catalogs", []) if c["name"] == catalog_name), None
+        )
         if not catalog:
             raise ValueError(f"Catalog {catalog_name} not found")
         return catalog
 
+
 # --- Lazy Initialization of the client ---
 _catalog_client_instance = None
+
 
 def get_catalog_client():
     """Lazily initializes and returns the DatabricksCatalogClient."""
@@ -88,7 +100,9 @@ def get_catalog_client():
         _catalog_client_instance = DatabricksCatalogClient()
     return _catalog_client_instance
 
+
 # These decorators should be imported and used in main.py
+
 
 def mcp_tools(mcp):
     @mcp.tool()
@@ -114,7 +128,7 @@ def mcp_tools(mcp):
         properties: Optional[dict] = None,
         provider_name: str = "",
         share_name: str = "",
-        storage_root: str = ""
+        storage_root: str = "",
     ) -> Dict:
         """
         Cria um novo catálogo no Databricks Unity Catalog.
@@ -138,7 +152,7 @@ def mcp_tools(mcp):
                 properties=properties,
                 provider_name=provider_name,
                 share_name=share_name,
-                storage_root=storage_root
+                storage_root=storage_root,
             )
         except requests.exceptions.HTTPError as e:
             if e.response is not None:
