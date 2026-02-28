@@ -232,17 +232,42 @@ def __init__(self):
 
 ```
 databricks-mcp/
-├── main.py          # Entry point, FastMCP setup
-├── catalogs.py      # Catalog CRUD + MCP tools
-├── schemas.py       # Schema CRUD + MCP tools
-├── tables.py        # Table CRUD + MCP tools
-├── queries.py       # SQL execution + MCP tools
-├── resources.py     # SQL warehouses + MCP tools
-├── Dockerfile       # Railway deployment
-├── .dockerignore   # Docker build exclusions
-├── .env             # Local config (not committed)
-└── pyproject.toml   # Project config
+├── main.py              # Entry point, FastMCP setup
+├── catalogs.py          # Catalog CRUD + MCP tools
+├── schemas.py           # Schema CRUD + MCP tools
+├── tables.py            # Table CRUD + MCP tools
+├── queries.py           # SQL execution + MCP tools
+├── resources.py         # SQL warehouses + MCP tools
+├── Dockerfile           # Railway deployment
+├── docker-compose.yml   # Local Docker development
+├── .dockerignore        # Docker build exclusions
+├── opencode.json        # OpenCode MCP configuration
+├── .env                 # Local config (not committed)
+└── pyproject.toml       # Project config
 ```
+
+### OpenCode Integration
+
+Create `opencode.json` for OpenCode MCP client:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "databricks-mcp": {
+      "type": "remote",
+      "url": "http://localhost:8080/mcp",
+      "enabled": true,
+      "environment": {
+        "DATABRICKS_HOST": "${DATABRICKS_HOST}",
+        "DATABRICKS_TOKEN": "${DATABRICKS_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+For Railway deployment, change URL to `https://your-project.up.railway.app/mcp`.
 
 ### VSCode Integration
 

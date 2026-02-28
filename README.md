@@ -24,11 +24,11 @@ Siga estas instruções para configurar e executar o Databricks MCP em seu ambie
 
 ### Pré-requisitos
 
-- Python 3.9 ou superior
+- Python 3.14+ (ou Docker)
 - Acesso a um workspace Databricks com o Unity Catalog habilitado
 - Um token de acesso pessoal do Databricks
 
-### Instalação
+### Instalação Local (Python)
 
 Este projeto utiliza o `uv` como gerenciador de pacotes e ambientes virtuais.
 
@@ -40,65 +40,119 @@ Este projeto utiliza o `uv` como gerenciador de pacotes e ambientes virtuais.
     ```
 
 2.  **Crie o ambiente virtual e instale as dependências:**
-    O `uv` simplifica a criação do ambiente e a instalação. O comando a seguir lê o `pyproject.toml` e instala as dependências necessárias.
     ```bash
-    uv pip install -r requirements.txt
+    uv pip install -e .
     ```
+
+### Instalação com Docker
+
+```bash
+# Build da imagem
+docker build -t databricks-mcp .
+
+# Executar o container
+docker run -d -p 8080:8080 databricks-mcp
+
+# Ou usar docker-compose
+docker-compose up -d
+```
 
 ### Configuração
 
-1.  Crie um arquivo chamado `.env` na raiz do projeto.
-2.  Adicione suas credenciais do Databricks ao arquivo `.env`:
+#### Variáveis de Ambiente
 
-    ```env
-    DATABRICKS_HOST="https://seu-workspace.databricks.net"
-    DATABRICKS_TOKEN="seu-token-de-acesso-pessoal"
-    ```
+Crie um arquivo `.env` na raiz do projeto (para desenvolvimento local):
 
-    - `DATABRICKS_HOST`: A URL do seu workspace Databricks.
-    - `DATABRICKS_TOKEN`: Seu token de acesso pessoal.
+```env
+DATABRICKS_HOST="https://seu-workspace.databricks.net"
+DATABRICKS_TOKEN="seu-token-de-acesso-pessoal"
+```
 
-## 🛠️ Uso
+- `DATABRICKS_HOST`: A URL do seu workspace Databricks.
+- `DATABRICKS_TOKEN`: Seu token de acesso pessoal.
 
-Para usar este servidor com um cliente MCP (como o Gemini CLI no VS Code), você precisará configurar o cliente para iniciar o servidor. A configuração informa ao cliente qual comando executar.
+#### Configuração do Cliente MCP
 
-Adicione o seguinte objeto `mcpServers` às suas configurações de usuário ou do workspace (por exemplo, em `.vscode/settings.json`):
+**VSCode / Cursor:**
 
 ```json
 {
   "mcpServers": {
-    "Databricks MCP": {
-      "command": "<caminho_para_seu_uv.EXE>",
-      "args": [
-        "run",
-        "--with",
-        "requests",
-        "--with",
-        "argparse",
-        "--with",
-        "mcp[cli]",
-        "mcp",
-        "run",
-        "<caminho_para_seu_main.py>"
-      ]
+    "databricks-mcp": {
+      "url": "http://localhost:8080/mcp",
+      "env": {
+        "DATABRICKS_HOST": "https://seu-workspace.databricks.net",
+        "DATABRICKS_TOKEN": "dapi..."
+      }
     }
   }
 }
 ```
-<p align="center">
-  <img src="assets/video 1.gif" alt="Databricks MCP Demo 1" width="700"/>
-</p>
 
-<p align="center">
-  <img src="assets/video 2.gif" alt="Databricks MCP Demo 2" width="700"/>
-</p>
+**OpenCode:**
 
-**Observações:**
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "databricks-mcp": {
+      "type": "remote",
+      "url": "http://localhost:8080/mcp",
+      "enabled": true,
+      "environment": {
+        "DATABRICKS_HOST": "${DATABRICKS_HOST}",
+        "DATABRICKS_TOKEN": "${DATABRICKS_TOKEN}"
+      }
+    }
+  }
+}
+```
 
-*   **Caminho do Comando:** Substitua `<caminho_para_seu_uv.EXE>` e `<caminho_para_seu_main.py>` pelos caminhos absolutos corretos em sua máquina.
-*   **Ativação:** Uma vez configurado, seu cliente MCP (por exemplo, a extensão Gemini no VS Code) irá iniciar o servidor automaticamente quando você interagir com ele neste projeto.
+**Railway (Produção):**
 
-O método de execução anterior (`uv run python main.py stdio`) é destinado a testes locais e não para integração com um cliente MCP.
+```json
+{
+  "mcpServers": {
+    "databricks-mcp": {
+      "url": "https://seu-projeto.up.railway.app/mcp",
+      "env": {
+        "DATABRICKS_HOST": "https://seu-workspace.databricks.net",
+        "DATABRICKS_TOKEN": "dapi..."
+      }
+    }
+  }
+}
+```
+
+## 🛠️ Uso
+
+### Desenvolvimento Local
+
+```bash
+# Modo stdio (para testes)
+uv run python main.py stdio
+
+# Modo HTTP (StreamableHTTP)
+uv run python main.py
+```
+
+### Docker
+
+```bash
+# Development
+docker build -t databricks-mcp .
+docker run -d -p 8080:8080 -e PORT=8080 databricks-mcp
+
+# Testar endpoint
+curl http://localhost:8080/mcp
+```
+
+### Deploy no Railway
+
+1. Conecte o repositório GitHub ao Railway
+2. Railway detecta automaticamente o `Dockerfile`
+3. Não é necessário configurar variáveis de ambiente (credenciais vêm do cliente)
+4. O endpoint será `https://SEU-PROJETO.up.railway.app/mcp`
 
 ### Ferramentas Disponíveis
 
