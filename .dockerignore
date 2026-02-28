@@ -1,0 +1,14 @@
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+.env
+.git
+.gitignore
+.vscode
+*.md
+LICENSE
+uv.lock
+.DS_Store
+*.log
