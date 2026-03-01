@@ -1,5 +1,3 @@
-
-
 # Databricks MCP
 
 [![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
@@ -35,6 +33,7 @@ Siga estas instruções para configurar e executar o Databricks MCP em seu ambie
 Este projeto utiliza o `uv` como gerenciador de pacotes e ambientes virtuais.
 
 1.  **Clone o repositório:**
+
     ```bash
     git clone https://github.com/amslimaa/databricks-mcp.git
 
@@ -75,12 +74,49 @@ DATABRICKS_TOKEN="seu-token-de-acesso-pessoal"
 
 #### Configuração do Cliente MCP
 
+**Claude Desktop:**
+
+```json
+{
+  "mcpServers": {
+    "Databricks MCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "http://localhost:8080/mcp",
+        "--header",
+        "X-Databricks-Host: DATABRICKS_HOST",
+        "--header",
+        "Authorization: Bearer DATABRICKS_TOKEN"
+      ]
+    }
+  }
+}
+```
+
+**Gemini:**
+
+```json
+{
+  "mcpServers": {
+    "Databricks MCP": {
+      "httpUrl": "http://localhost:8080/mcp",
+      "headers": {
+        "X-Databricks-Host": "${DATABRICKS_HOST}",
+        "X-Databricks-Token": "${DATABRICKS_TOKEN}"
+      }
+    }
+  }
+}
+```
+
 **VSCode / Cursor:**
 
 ```json
 {
   "mcpServers": {
-    "databricks-mcp": {
+    "Databricks MCP": {
       "url": "http://localhost:8080/mcp",
       "env": {
         "DATABRICKS_HOST": "https://seu-workspace.databricks.net",
@@ -97,7 +133,7 @@ DATABRICKS_TOKEN="seu-token-de-acesso-pessoal"
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "databricks-mcp": {
+    "Databricks MCP": {
       "type": "remote",
       "url": "http://localhost:8080/mcp",
       "enabled": true,
@@ -115,7 +151,7 @@ DATABRICKS_TOKEN="seu-token-de-acesso-pessoal"
 ```json
 {
   "mcpServers": {
-    "databricks-mcp": {
+    "Databricks MCP": {
       "url": "https://seu-projeto.up.railway.app/mcp",
       "env": {
         "DATABRICKS_HOST": "https://seu-workspace.databricks.net",
@@ -192,7 +228,7 @@ Aqui está uma visão geral das ferramentas disponíveis, agrupadas por módulo:
 - `resource: "table://{catalog_name}.{schema_name}.{table_name}"`: Obtém informações sobre uma tabela específica.
 
 #
+
 ## 🤝 Contribuições
 
 Contribuições são bem-vindas! Sinta-se à vontade para abrir uma issue ou enviar um pull request.
-
