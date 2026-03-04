@@ -94,16 +94,9 @@ class DatabricksSchemaClient:
         return {"status": "success", "message": f"Schema {full_name} deleted."}
 
 
-# --- Lazy Initialization of the client ---
-_schema_client_instance = None
-
-
 def get_schema_client():
-    """Lazily initializes and returns the DatabricksSchemaClient."""
-    global _schema_client_instance
-    if _schema_client_instance is None:
-        _schema_client_instance = DatabricksSchemaClient()
-    return _schema_client_instance
+    """Creates a new DatabricksSchemaClient with credentials from the current request."""
+    return DatabricksSchemaClient()
 
 
 def mcp_tools(mcp: FastMCP):

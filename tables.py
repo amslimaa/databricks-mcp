@@ -66,16 +66,9 @@ class DatabricksTableClient:
         return {"status": "success", "message": f"Table {full_name} deleted."}
 
 
-# --- Lazy Initialization of the client ---
-_table_client_instance = None
-
-
 def get_table_client():
-    """Lazily initializes and returns the DatabricksTableClient."""
-    global _table_client_instance
-    if _table_client_instance is None:
-        _table_client_instance = DatabricksTableClient()
-    return _table_client_instance
+    """Creates a new DatabricksTableClient with credentials from the current request."""
+    return DatabricksTableClient()
 
 
 def mcp_tools(mcp: FastMCP):

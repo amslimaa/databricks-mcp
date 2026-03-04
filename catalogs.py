@@ -89,16 +89,9 @@ class DatabricksCatalogClient:
         return catalog
 
 
-# --- Lazy Initialization of the client ---
-_catalog_client_instance = None
-
-
 def get_catalog_client():
-    """Lazily initializes and returns the DatabricksCatalogClient."""
-    global _catalog_client_instance
-    if _catalog_client_instance is None:
-        _catalog_client_instance = DatabricksCatalogClient()
-    return _catalog_client_instance
+    """Creates a new DatabricksCatalogClient with credentials from the current request."""
+    return DatabricksCatalogClient()
 
 
 # These decorators should be imported and used in main.py

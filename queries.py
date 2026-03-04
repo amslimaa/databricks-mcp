@@ -93,16 +93,9 @@ class DatabricksQueryClient:
         return final_result
 
 
-# --- Lazy Initialization of the client ---
-_query_client_instance = None
-
-
 def get_query_client():
-    """Lazily initializes and returns the DatabricksQueryClient."""
-    global _query_client_instance
-    if _query_client_instance is None:
-        _query_client_instance = DatabricksQueryClient()
-    return _query_client_instance
+    """Creates a new DatabricksQueryClient with credentials from the current request."""
+    return DatabricksQueryClient()
 
 
 def mcp_tools(mcp: FastMCP):

@@ -42,16 +42,9 @@ class DatabricksResourcesClient:
         return response.json()
 
 
-# --- Lazy Initialization of the client ---
-_resources_client_instance = None
-
-
 def get_resources_client():
-    """Lazily initializes and returns the DatabricksResourcesClient."""
-    global _resources_client_instance
-    if _resources_client_instance is None:
-        _resources_client_instance = DatabricksResourcesClient()
-    return _resources_client_instance
+    """Creates a new DatabricksResourcesClient with credentials from the current request."""
+    return DatabricksResourcesClient()
 
 
 def mcp_tools(mcp: FastMCP):
