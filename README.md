@@ -1,6 +1,6 @@
 # Databricks MCP
 
-[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.14%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 O **Databricks MCP** é um servidor de protocolo de contexto de modelo (MCP) que fornece um conjunto de ferramentas poderosas e intuitivas para interagir com seu ambiente Databricks. Ele simplifica o gerenciamento de recursos do Unity Catalog e a execução de consultas, expondo funcionalidades complexas da API Databricks como ferramentas fáceis de usar.
